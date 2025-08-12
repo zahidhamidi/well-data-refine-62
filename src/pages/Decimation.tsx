@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/ui/file-upload";
 import TableInput from "@/components/ui/table-input";
 import DrillChart from "@/components/ui/drill-chart";
@@ -51,6 +52,7 @@ interface DecimationConfig {
 
 const Decimation = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [dataQuality, setDataQuality] = useState<DataQualityMetrics | null>(null);
@@ -77,6 +79,12 @@ const Decimation = () => {
     setUploadedFile(file);
     setIsProcessing(true);
     
+    toast({
+      title: "✅ File Uploaded",
+      description: `Processing ${file.name}...`,
+      className: "border-green-200 bg-green-50 text-green-800",
+    });
+    
     // Simulate data processing and quality assessment
     setTimeout(() => {
       // Mock data quality metrics
@@ -101,6 +109,12 @@ const Decimation = () => {
       setDrillingData(mockData);
       setIsProcessing(false);
       setCurrentStep(2);
+      
+      toast({
+        title: "✅ Data Processed",
+        description: "Quality assessment completed successfully!",
+        className: "border-green-200 bg-green-50 text-green-800",
+      });
     }, 2000);
   };
 
@@ -108,6 +122,12 @@ const Decimation = () => {
     setSectionData(sections);
     setFormationData(formations);
     setCurrentStep(4);
+    
+    toast({
+      title: "✅ Sections Confirmed",
+      description: `${sections.length} sections and ${formations.length} formations saved!`,
+      className: "border-green-200 bg-green-50 text-green-800",
+    });
   };
 
   const getQualityColor = (score: number) => {
@@ -192,6 +212,11 @@ const Decimation = () => {
   const goToPreviousStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      toast({
+        title: "✅ Step Changed",
+        description: `Navigated to ${steps[currentStep - 2].title}`,
+        className: "border-green-200 bg-green-50 text-green-800",
+      });
     }
   };
 
@@ -271,7 +296,14 @@ const Decimation = () => {
             </Alert>
 
             <div className="flex justify-center">
-              <Button onClick={() => setCurrentStep(3)} size="lg">
+              <Button onClick={() => {
+                setCurrentStep(3);
+                toast({
+                  title: "✅ Step Advanced",
+                  description: "Proceeding to Section Input",
+                  className: "border-green-200 bg-green-50 text-green-800",
+                });
+              }} size="lg">
                 Continue to Section Input
               </Button>
             </div>
@@ -359,7 +391,14 @@ const Decimation = () => {
             </div>
 
             <div className="flex justify-center">
-              <Button onClick={() => setCurrentStep(5)} size="lg">
+              <Button onClick={() => {
+                setCurrentStep(5);
+                toast({
+                  title: "✅ Ready to Export",
+                  description: "Proceeding to data export",
+                  className: "border-green-200 bg-green-50 text-green-800",
+                });
+              }} size="lg">
                 Export Data
               </Button>
             </div>
@@ -439,6 +478,12 @@ const Decimation = () => {
                       a.click();
                       document.body.removeChild(a);
                       window.URL.revokeObjectURL(url);
+                      
+                      toast({
+                        title: "✅ File Downloaded",
+                        description: `decimated-drilling-data.csv downloaded successfully!`,
+                        className: "border-green-200 bg-green-50 text-green-800",
+                      });
                     }}
                     size="lg"
                     className="px-8"
@@ -475,7 +520,14 @@ const Decimation = () => {
             <div className="flex items-center space-x-4">
               <Button 
                 variant="ghost" 
-                onClick={() => navigate("/")}
+                onClick={() => {
+                  toast({
+                    title: "✅ Navigation",
+                    description: "Returning to main modules page",
+                    className: "border-green-200 bg-green-50 text-green-800",
+                  });
+                  setTimeout(() => navigate("/"), 500);
+                }}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />

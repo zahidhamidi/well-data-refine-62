@@ -3,10 +3,12 @@ import { Upload, BarChart3, Settings, FileSpreadsheet } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import heroImage from "@/assets/drilling-hero.jpg";
 
 const Index = () => {
   const [activeModule, setActiveModule] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const modules = [
     {
@@ -37,8 +39,18 @@ const Index = () => {
 
   const handleModuleSelect = (moduleId: string) => {
     if (moduleId === "decimation") {
-      window.location.href = "/decimation";
+      toast({
+        title: "✅ Module Launched",
+        description: "Launching Data Decimation Tool...",
+        className: "border-green-200 bg-green-50 text-green-800",
+      });
+      setTimeout(() => window.location.href = "/decimation", 500);
     } else {
+      toast({
+        title: "✅ Module Selected",
+        description: `${modules.find(m => m.id === moduleId)?.title} coming soon!`,
+        className: "border-green-200 bg-green-50 text-green-800",
+      });
       setActiveModule(moduleId);
     }
   };

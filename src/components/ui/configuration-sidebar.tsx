@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
 
 interface DecimationConfig {
   depthInterval: number;
@@ -29,6 +30,8 @@ const ConfigurationSidebar: React.FC<ConfigurationSidebarProps> = ({
   sections,
   formations
 }) => {
+  const { toast } = useToast();
+  
   const updateConfig = (updates: Partial<DecimationConfig>) => {
     onConfigChange({ ...config, ...updates });
   };
@@ -177,6 +180,11 @@ const ConfigurationSidebar: React.FC<ConfigurationSidebarProps> = ({
           onClick={() => {
             // Configuration is already applied through onConfigChange prop
             // This button provides visual feedback that settings are saved
+            toast({
+              title: "✅ Configuration Applied",
+              description: `Decimation settings saved successfully!`,
+              className: "border-green-200 bg-green-50 text-green-800",
+            });
           }}
         >
           Apply Configuration
