@@ -180,13 +180,10 @@ const TableInput: React.FC<TableInputProps> = ({ onConfirm, initialSections, ini
             </Table>
           </div>
           
-          <div className="flex justify-between items-center mt-4">
+          <div className="flex justify-start items-center mt-4">
             <Button variant="outline" onClick={addSectionRow} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Add Row
-            </Button>
-            <Button variant="secondary" size="sm">
-              Confirm Entry
             </Button>
           </div>
         </CardContent>
@@ -258,13 +255,10 @@ const TableInput: React.FC<TableInputProps> = ({ onConfirm, initialSections, ini
             </Table>
           </div>
           
-          <div className="flex justify-between items-center mt-4">
+          <div className="flex justify-start items-center mt-4">
             <Button variant="outline" onClick={addFormationRow} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Add Row
-            </Button>
-            <Button variant="secondary" size="sm">
-              Confirm Entry
             </Button>
           </div>
         </CardContent>

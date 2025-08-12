@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { ArrowLeft, Upload, BarChart3, Settings, Download, CheckCircle, AlertCircle, XCircle, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -69,8 +70,7 @@ const Decimation = () => {
     { id: 2, title: "Data Audit", description: "Quality assessment and scoring" },
     { id: 3, title: "Section Input", description: "Define sections and formations" },
     { id: 4, title: "Visualization", description: "WOB, RPM, ROP analysis" },
-    { id: 5, title: "Configuration", description: "Decimation settings" },
-    { id: 6, title: "Export", description: "Download processed data" }
+    { id: 5, title: "Export", description: "Download processed data" }
   ];
 
   const handleFileUpload = async (file: File) => {
@@ -358,14 +358,106 @@ const Decimation = () => {
               </div>
             </div>
 
-            <div className="flex justify-center space-x-4">
-              <Button variant="outline" onClick={() => setCurrentStep(5)}>
-                Configure Export
-              </Button>
-              <Button onClick={() => setCurrentStep(6)}>
+            <div className="flex justify-center">
+              <Button onClick={() => setCurrentStep(5)} size="lg">
                 Export Data
               </Button>
             </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-2">Export Decimated Data</h2>
+              <p className="text-muted-foreground">
+                Review your decimated data and export to CSV
+              </p>
+            </div>
+
+            {decimatedData && decimatedData.length > 0 ? (
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Decimated Data Preview</CardTitle>
+                    <CardDescription>
+                      Showing {decimatedData.length} decimated data points 
+                      {decimationConfig.depthInterval > 0 && ` (${decimationConfig.depthInterval} m/ft intervals)`}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead>Depth (m/ft)</TableHead>
+                            <TableHead>WOB (klbs)</TableHead>
+                            <TableHead>RPM</TableHead>
+                            <TableHead>ROP (ft/hr)</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {decimatedData.slice(0, 50).map((point, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{point.depth.toFixed(1)}</TableCell>
+                              <TableCell>{point.wob.toFixed(2)}</TableCell>
+                              <TableCell>{point.rpm.toFixed(1)}</TableCell>
+                              <TableCell>{point.rop.toFixed(2)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    {decimatedData.length > 50 && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Showing first 50 rows of {decimatedData.length} total rows
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <div className="flex justify-center">
+                  <Button 
+                    onClick={() => {
+                      // Create CSV content
+                      const headers = ['Depth', 'WOB', 'RPM', 'ROP'];
+                      const csvContent = [
+                        headers.join(','),
+                        ...decimatedData.map(point => 
+                          [point.depth.toFixed(1), point.wob.toFixed(2), point.rpm.toFixed(1), point.rop.toFixed(2)].join(',')
+                        )
+                      ].join('\n');
+
+                      // Create and download file
+                      const blob = new Blob([csvContent], { type: 'text/csv' });
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'decimated-drilling-data.csv';
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      window.URL.revokeObjectURL(url);
+                    }}
+                    size="lg"
+                    className="px-8"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export to CSV
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center text-muted-foreground">
+                    <p>No decimated data available for export.</p>
+                    <p className="text-sm mt-2">Please ensure you have uploaded data and configured decimation settings.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
 
