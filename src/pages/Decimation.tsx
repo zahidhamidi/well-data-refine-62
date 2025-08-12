@@ -73,114 +73,35 @@ const Decimation = () => {
     { id: 5, title: "Export", description: "Download processed data" }
   ];
 
-  const parseFileData = async (file: File): Promise<any[]> => {
-    const text = await file.text();
-    const extension = file.name.split('.').pop()?.toLowerCase();
-    
-    if (extension === 'csv') {
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
-      const data = lines.slice(1).map(line => {
-        const values = line.split(',');
-        const row: any = {};
-        headers.forEach((header, index) => {
-          row[header] = values[index]?.trim();
-        });
-        return row;
-      }).filter(row => Object.values(row).some(v => v)); // Remove empty rows
-      return data;
-    }
-    
-    // For now, return mock data for .xlsx and .las files
-    // In a real implementation, you'd use libraries like xlsx or specific LAS parsers
-    return Array.from({ length: 500 }, (_, i) => ({
-      'Depth': (1000 + i * 2).toString(),
-      'WOB': (15 + Math.sin(i * 0.02) * 8 + Math.random() * 3).toFixed(2),
-      'RPM': (120 + Math.cos(i * 0.015) * 30 + Math.random() * 10).toFixed(1),
-      'ROP': (12 + Math.sin(i * 0.01) * 6 + Math.random() * 4).toFixed(2),
-      'Total Pump Output': (150 + Math.random() * 50).toFixed(1),
-      'Timestamp': new Date(2024, 0, 1, 0, i * 0.1).toISOString()
-    }));
-  };
-
-  const calculateDataQuality = (data: any[]): DataQualityMetrics => {
-    if (data.length === 0) {
-      return { completeness: 0, conformity: 0, statistics: 0, overall: 0 };
-    }
-
-    // Data Completeness - check for empty values in required columns
-    const requiredColumns = ['RPM', 'WOB', 'Total Pump Output', 'Depth'];
-    const completenessScores = requiredColumns.map(column => {
-      const totalRows = data.length;
-      const emptyRows = data.filter(row => !row[column] || row[column].toString().trim() === '').length;
-      return ((totalRows - emptyRows) / totalRows) * 100;
-    });
-    const completeness = Math.round(completenessScores.reduce((a, b) => a + b, 0) / requiredColumns.length);
-
-    // Data Conformity - check if required columns exist
-    const conformityColumns = ['WOB', 'Depth', 'Timestamp', 'RPM'];
-    const existingColumns = Object.keys(data[0] || {});
-    const conformityScore = conformityColumns.filter(col => 
-      existingColumns.some(existing => existing.toLowerCase().includes(col.toLowerCase()))
-    ).length;
-    const conformity = Math.round((conformityScore / conformityColumns.length) * 100);
-
-    // Statistics Quality - basic data distribution check
-    const numericColumns = ['WOB', 'RPM', 'Depth'];
-    let statisticsScore = 100;
-    numericColumns.forEach(column => {
-      const values = data.map(row => parseFloat(row[column])).filter(v => !isNaN(v));
-      if (values.length > 0) {
-        const mean = values.reduce((a, b) => a + b, 0) / values.length;
-        const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
-        // Penalize if variance is too high (likely outliers or data issues)
-        if (variance > mean * 2) statisticsScore -= 10;
-      }
-    });
-    const statistics = Math.max(75, statisticsScore); // Minimum 75%
-
-    const overall = Math.round((completeness + conformity + statistics) / 3);
-
-    return { completeness, conformity, statistics, overall };
-  };
-
   const handleFileUpload = async (file: File) => {
     setUploadedFile(file);
     setIsProcessing(true);
     
-    try {
-      // Parse the actual file data
-      const parsedData = await parseFileData(file);
+    // Simulate data processing and quality assessment
+    setTimeout(() => {
+      // Mock data quality metrics
+      const mockQuality: DataQualityMetrics = {
+        completeness: Math.floor(Math.random() * 20) + 80, // 80-100%
+        conformity: Math.floor(Math.random() * 15) + 85,   // 85-100%
+        statistics: Math.floor(Math.random() * 10) + 90,   // 90-100%
+        overall: 0
+      };
+      mockQuality.overall = Math.round((mockQuality.completeness + mockQuality.conformity + mockQuality.statistics) / 3);
       
-      // Calculate real data quality metrics
-      const quality = calculateDataQuality(parsedData);
-      setDataQuality(quality);
+      setDataQuality(mockQuality);
       
-      // Convert parsed data to drilling data format
-      const processedData: DrillingData[] = parsedData.map(row => ({
-        depth: parseFloat(row.Depth || row.depth || '0'),
-        wob: parseFloat(row.WOB || row.wob || '0'),
-        rpm: parseFloat(row.RPM || row.rpm || '0'),
-        rop: parseFloat(row.ROP || row.rop || row['Rate of Penetration'] || '0')
-      })).filter(row => row.depth > 0); // Remove invalid rows
-      
-      setDrillingData(processedData);
-      setIsProcessing(false);
-      setCurrentStep(2);
-    } catch (error) {
-      console.error('Error processing file:', error);
-      setIsProcessing(false);
-      // Fallback to mock data if parsing fails
+      // Mock drilling data with more realistic values
       const mockData: DrillingData[] = Array.from({ length: 500 }, (_, i) => ({
-        depth: 1000 + i * 2,
+        depth: 1000 + i * 2, // Every 2 feet
         wob: 15 + Math.sin(i * 0.02) * 8 + Math.random() * 3,
         rpm: 120 + Math.cos(i * 0.015) * 30 + Math.random() * 10,
         rop: 12 + Math.sin(i * 0.01) * 6 + Math.random() * 4
       }));
+      
       setDrillingData(mockData);
-      setDataQuality({ completeness: 85, conformity: 90, statistics: 88, overall: 88 });
+      setIsProcessing(false);
       setCurrentStep(2);
-    }
+    }, 2000);
   };
 
   const handleConfirmSections = (sections: SectionData[], formations: FormationData[]) => {
@@ -319,34 +240,14 @@ const Decimation = () => {
             {dataQuality && (
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { 
-                    label: "Data Completeness", 
-                    value: dataQuality.completeness, 
-                    description: "Missing data points",
-                    tooltip: "Percentage of non-empty values in RPM, WOB, Total Pump Output, and Depth columns"
-                  },
-                  { 
-                    label: "Data Conformity", 
-                    value: dataQuality.conformity, 
-                    description: "Format compliance",
-                    tooltip: "Presence of required columns: WOB, Depth, Timestamp, and RPM"
-                  },
-                  { 
-                    label: "Statistical Quality", 
-                    value: dataQuality.statistics, 
-                    description: "Data distribution",
-                    tooltip: "Statistical analysis of data variance and outlier detection"
-                  },
-                  { 
-                    label: "Overall Score", 
-                    value: dataQuality.overall, 
-                    description: "Combined quality",
-                    tooltip: "Average score of completeness, conformity, and statistical quality"
-                  }
+                  { label: "Data Completeness", value: dataQuality.completeness, description: "Missing data points" },
+                  { label: "Data Conformity", value: dataQuality.conformity, description: "Format compliance" },
+                  { label: "Statistical Quality", value: dataQuality.statistics, description: "Data distribution" },
+                  { label: "Overall Score", value: dataQuality.overall, description: "Combined quality" }
                 ].map((metric, index) => {
                   const Icon = getQualityIcon(metric.value);
                   return (
-                    <Card key={index} className="relative group cursor-help">
+                    <Card key={index}>
                       <CardContent className="pt-6">
                         <div className="text-center space-y-2">
                           <Icon className={`h-8 w-8 mx-auto ${getQualityColor(metric.value)}`} />
@@ -354,11 +255,6 @@ const Decimation = () => {
                           <div className="text-sm font-medium">{metric.label}</div>
                           <div className="text-xs text-muted-foreground">{metric.description}</div>
                           <Progress value={metric.value} className="w-full" />
-                        </div>
-                        
-                        {/* Tooltip */}
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-popover text-popover-foreground text-xs rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-64 text-center border">
-                          {metric.tooltip}
                         </div>
                       </CardContent>
                     </Card>
