@@ -21,16 +21,22 @@ interface FormationData {
 
 interface TableInputProps {
   onConfirm: (sections: SectionData[], formations: FormationData[]) => void;
+  initialSections?: SectionData[];
+  initialFormations?: FormationData[];
 }
 
-const TableInput: React.FC<TableInputProps> = ({ onConfirm }) => {
-  const [sections, setSections] = useState<SectionData[]>([
-    { id: '1', startDepth: '', endDepth: '', holeDiameter: '' }
-  ]);
+const TableInput: React.FC<TableInputProps> = ({ onConfirm, initialSections, initialFormations }) => {
+  const [sections, setSections] = useState<SectionData[]>(
+    initialSections && initialSections.length > 0 
+      ? initialSections 
+      : [{ id: '1', startDepth: '', endDepth: '', holeDiameter: '' }]
+  );
   
-  const [formations, setFormations] = useState<FormationData[]>([
-    { id: '1', startDepth: '', endDepth: '', formationName: '' }
-  ]);
+  const [formations, setFormations] = useState<FormationData[]>(
+    initialFormations && initialFormations.length > 0 
+      ? initialFormations 
+      : [{ id: '1', startDepth: '', endDepth: '', formationName: '' }]
+  );
 
   const addSectionRow = () => {
     const newSection: SectionData = {

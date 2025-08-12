@@ -11,15 +11,17 @@ interface FileUploadProps {
   acceptedFileTypes?: string[];
   maxFileSize?: number;
   className?: string;
+  initialFile?: File | null;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
   onFileSelect,
   acceptedFileTypes = ['.xlsx', '.csv', '.las'],
   maxFileSize = 50 * 1024 * 1024, // 50MB
-  className
+  className,
+  initialFile
 }) => {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(initialFile || null);
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {

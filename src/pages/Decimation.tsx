@@ -188,6 +188,7 @@ const Decimation = () => {
               onFileSelect={handleFileUpload}
               acceptedFileTypes={['.xlsx', '.csv', '.las']}
               maxFileSize={100 * 1024 * 1024} // 100MB
+              initialFile={uploadedFile}
             />
 
             {isProcessing && (
@@ -264,7 +265,11 @@ const Decimation = () => {
               </p>
             </div>
 
-            <TableInput onConfirm={handleConfirmSections} />
+            <TableInput 
+              onConfirm={handleConfirmSections} 
+              initialSections={sectionData}
+              initialFormations={formationData}
+            />
           </div>
         );
 
