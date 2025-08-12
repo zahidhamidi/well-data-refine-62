@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 
 interface DecimationConfig {
-  intervalBins: number;
+  depthInterval: number;
   filterMode: 'section' | 'formation' | 'all';
   selectedSection?: string;
   selectedFormation?: string;
@@ -45,26 +45,34 @@ const ConfigurationSidebar: React.FC<ConfigurationSidebarProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Decimation Interval */}
+        {/* Depth Interval */}
         <div className="space-y-3">
           <Label className="text-sm font-medium flex items-center gap-2">
             <Sliders className="h-4 w-4" />
-            Decimation Interval Bins
+            Depth Interval (m/ft)
           </Label>
           <div className="space-y-2">
             <Slider
-              value={[config.intervalBins]}
-              onValueChange={(value) => updateConfig({ intervalBins: value[0] })}
-              min={5}
-              max={100}
-              step={5}
+              value={[config.depthInterval]}
+              onValueChange={(value) => updateConfig({ depthInterval: value[0] })}
+              min={0}
+              max={30}
+              step={1}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>5 bins</span>
-              <span className="font-medium">{config.intervalBins} bins</span>
-              <span>100 bins</span>
+              <span>0 (No decimation)</span>
+              <span className="font-medium">
+                {config.depthInterval === 0 ? "No decimation" : `${config.depthInterval} m/ft`}
+              </span>
+              <span>30 m/ft</span>
             </div>
+            <p className="text-xs text-muted-foreground">
+              {config.depthInterval === 0 
+                ? "Original data will be displayed" 
+                : `Data will be decimated every ${config.depthInterval} m/ft using median values`
+              }
+            </p>
           </div>
         </div>
 

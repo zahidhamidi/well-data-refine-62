@@ -40,7 +40,7 @@ interface FormationData {
 }
 
 interface DecimationConfig {
-  intervalBins: number;
+  depthInterval: number;
   filterMode: 'section' | 'formation' | 'all';
   selectedSection?: string;
   selectedFormation?: string;
@@ -58,7 +58,7 @@ const Decimation = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [drillingData, setDrillingData] = useState<DrillingData[]>([]);
   const [decimationConfig, setDecimationConfig] = useState<DecimationConfig>({
-    intervalBins: 20,
+    depthInterval: 10,
     filterMode: 'all',
     enableSmoothing: false,
     outlierRemoval: false
@@ -124,7 +124,7 @@ const Decimation = () => {
 
   // Calculate decimated data based on configuration
   const decimatedData = useMemo(() => {
-    if (!drillingData.length || decimationConfig.intervalBins === 0) return null;
+    if (!drillingData.length || decimationConfig.depthInterval === 0) return null;
 
     let filteredData = drillingData;
     
@@ -145,21 +145,44 @@ const Decimation = () => {
       }
     }
 
-    // Perform decimation
-    const binSize = Math.ceil(filteredData.length / decimationConfig.intervalBins);
+    if (filteredData.length === 0) return null;
+
+    // Sort by depth to ensure proper binning
+    filteredData.sort((a, b) => a.depth - b.depth);
+
+    const minDepth = Math.floor(filteredData[0].depth);
+    const maxDepth = Math.ceil(filteredData[filteredData.length - 1].depth);
+    const depthInterval = decimationConfig.depthInterval;
+
     const decimated: DrillingData[] = [];
 
-    for (let i = 0; i < filteredData.length; i += binSize) {
-      const bin = filteredData.slice(i, i + binSize);
-      if (bin.length > 0) {
-        // Calculate average for each parameter
-        const avgPoint: DrillingData = {
-          depth: bin.reduce((sum, p) => sum + p.depth, 0) / bin.length,
-          wob: bin.reduce((sum, p) => sum + p.wob, 0) / bin.length,
-          rpm: bin.reduce((sum, p) => sum + p.rpm, 0) / bin.length,
-          rop: bin.reduce((sum, p) => sum + p.rop, 0) / bin.length
+    // Create depth bins based on the interval
+    for (let depthStart = minDepth; depthStart < maxDepth; depthStart += depthInterval) {
+      const depthEnd = depthStart + depthInterval;
+      
+      // Get data points in this depth interval
+      const intervalData = filteredData.filter(d => d.depth >= depthStart && d.depth < depthEnd);
+      
+      if (intervalData.length > 0) {
+        // Sort data for median calculation
+        const sortedWob = [...intervalData].sort((a, b) => a.wob - b.wob);
+        const sortedRpm = [...intervalData].sort((a, b) => a.rpm - b.rpm);
+        const sortedRop = [...intervalData].sort((a, b) => a.rop - b.rop);
+        
+        // Calculate median for each parameter (following the GitHub script approach)
+        const getMedian = (arr: number[]) => {
+          const mid = Math.floor(arr.length / 2);
+          return arr.length % 2 !== 0 ? arr[mid] : (arr[mid - 1] + arr[mid]) / 2;
         };
-        decimated.push(avgPoint);
+        
+        const decimatedPoint: DrillingData = {
+          depth: depthStart + depthInterval / 2, // Use center of interval
+          wob: getMedian(sortedWob.map(d => d.wob)),
+          rpm: getMedian(sortedRpm.map(d => d.rpm)),
+          rop: getMedian(sortedRop.map(d => d.rop))
+        };
+        
+        decimated.push(decimatedPoint);
       }
     }
 
